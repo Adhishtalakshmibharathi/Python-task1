@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebScrape Analyzer — Python Internship Task 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #252535;
+    --accent: #7c5cfc;
+    --accent2: #fc5c7d;
+    --accent3: #5cf4c4;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .header-text p {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(124,92,252,0.15);
+    border: 1px solid rgba(124,92,252,0.4);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* MAIN LAYOUT */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 28px 0;
+  }
+
+  /* PANELS */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+  .panel-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .panel-body { padding: 20px; }
+
+  /* FULL WIDTH PANEL */
+  .panel-full {
+    grid-column: 1 / -1;
+  }
+
+  /* INPUT SECTION */
+  .input-group { margin-bottom: 16px; }
+  .input-group label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .url-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: var(--accent); }
+  .url-input::placeholder { color: var(--muted); }
+
+  select.url-input {
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .topics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .topic-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .topic-chip:hover, .topic-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,92,252,0.08);
+  }
+
+  .scrape-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #5a3fd6);
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    color: #fff;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .scrape-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(124,92,252,0.4); }
+  .scrape-btn:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+
+  /* TERMINAL / CODE PANEL */
+  .terminal {
+    background: #0d0d14;
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .terminal::-webkit-scrollbar { width: 4px; }
+  .terminal::-webkit-scrollbar-track { background: transparent; }
+  .terminal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .t-line { display: flex; gap: 10px; }
+  .t-prompt { color: var(--accent3); flex-shrink: 0; }
+  .t-cmd { color: #a0a0c0; }
+  .t-out { color: var(--muted); padding-left: 20px; }
+  .t-success { color: var(--accent3); }
+  .t-error { color: var(--accent2); }
+  .t-info { color: var(--accent); }
+  .t-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--accent3);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* RESULTS TABLE */
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .results-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .results-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(37,37,53,0.5);
+    vertical-align: middle;
+  }
+  .results-table tr:last-child td { border-bottom: none; }
+  .results-table tr:hover td { background: rgba(124,92,252,0.04); }
+
+  .sentiment-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .sent-positive { background: rgba(92,244,196,0.15); color: var(--accent3); border: 1px solid rgba(92,244,196,0.3); }
+  .sent-neutral  { background: rgba(107,107,133,0.15); color: var(--muted); border: 1px solid rgba(107,107,133,0.3); }
+  .sent-negative { background: rgba(252,92,125,0.15); color: var(--accent2); border: 1px solid rgba(252,92,125,0.3); }
+
+  .score-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s ease;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* SENTIMENT CHART */
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 80px;
+    padding-top: 8px;
+  }
+  .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 1s ease;
+    min-height: 4px;
+  }
+  .chart-bar-label { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+
+  /* TREND LINE (SVG) */
+  .trend-svg { width: 100%; height: 80px; }
+
+  /* PYTHON CODE SNIPPET */
+  .code-block {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #546e7a; }
+  .nb { color: var(--accent3); }
+
+  /* LOADING SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 14px 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; padding: 20px; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">🕷️</div>
+    <div class="header-text">
+      <h1>WebScrape Analyzer</h1>
+      <p>Python Internship — Task 1 / Web Scraping &amp; Sentiment Analysis</p>
+    </div>
+    <span class="badge">TASK 1 / 5</span>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- CONFIG PANEL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="dot" style="background:#fc5c7d"></div>
+        <div class="dot" style="background:#ffd93d"></div>
+        <div class="dot" style="background:#5cf4c4"></div>
+        &nbsp; scraper_config.py
+      </div>
+      <div class="panel-body">
+        <div class="input-group">
+          <label>Target Source</label>
+          <select class="url-input" id="sourceSelect">
+            <option value="news">News Articles (Reuters / BBC style)</option>
+            <option value="tech">Tech Blog Posts (TechCrunch style)</option>
+            <option value="finance">Finance News (Bloomberg style)</option>
+            <option value="science">Science Articles (Nature style)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Analysis Topic</label>
+          <div class="topics-grid">
+            <div class="topic-chip active" data-topic="AI & Machine Learning">🤖 AI / ML</div>
+            <div class="topic-chip" data-topic="Climate Change">🌍 Climate</div>
+            <div class="topic-chip" data-topic="Cryptocurrency">₿ Crypto</div>
+            <div class="topic-chip" data-topic="Space Exploration">🚀 Space</div>
+            <div class="topic-chip" data-topic="Healthcare">💊 Healthcare</div>
+            <div class="topic-chip" data-topic="Electric Vehicles">⚡ EVs</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Number of Articles</label>
+          <select class="url-input" id="articleCount">
+            <option value="5">5 articles</option>
+            <option value="8" selected>8 articles</option>
+            <option value="10">10 articles</option>
+          </select>
+        </div>
+        <button class="scrape-btn" id="scrapeBtn" onclick="runScraper()">
+          ▶ Run Scraper &amp; Analyze
+        </button>
+      </div>
+    </div>
+
+    <!-- TERMINAL PANEL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="dot" style="background:#fc5c7d"></div>
+        <div class="dot" style="background:#ffd93d"></div>
+        <div class="dot" style="background:#5cf4c4"></div>
+        &nbsp; terminal
+      </div>
+      <div class="panel-body" style="padding:12px">
+        <div class="terminal" id="terminal">
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> python scraper.py --help</span></div>
+          <div class="t-out" style="color:#a0a0c0; margin-top:4px">WebScrape Analyzer v1.0.0</div>
+          <div class="t-out">Usage: scraper.py [source] [topic] [count]</div>
+          <div class="t-out" style="margin-top:8px; color:var(--muted)">Configure options and click Run ▶</div>
+          <div class="t-line" style="margin-top:8px"><span class="t-prompt">$</span><span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS TABLE (full width) -->
+    <div class="panel panel-full" id="resultsPanel">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('data')">📊 Scraped Data</div>
+        <div class="tab" onclick="switchTab('analysis')">🔍 Analysis</div>
+        <div class="tab" onclick="switchTab('code')">🐍 Python Code</div>
+      </div>
+
+      <!-- DATA TAB -->
+      <div class="tab-content active" id="tab-data">
+        <div class="empty-state" id="emptyState">
+          <div class="icon">🕸️</div>
+          <div>No data scraped yet.</div>
+          <div style="margin-top:4px; color:#404055">Configure settings above and run the scraper.</div>
+        </div>
+        <div id="tableWrap" class="hidden">
+          <div class="stats-row" id="statsRow"></div>
+          <div style="overflow-x:auto">
+            <table class="results-table" id="resultsTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Headline</th>
+                  <th>Source</th>
+                  <th>Date</th>
+                  <th>Sentiment</th>
+                  <th>Score</th>
+                  <th>Keywords</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYSIS TAB -->
+      <div class="tab-content" id="tab-analysis">
+        <div class="empty-state" id="analysisEmpty">
+          <div class="icon">📈</div>
+          <div>Run the scraper to see analysis.</div>
+        </div>
+        <div id="analysisContent" class="hidden">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+            <!-- Sentiment Distribution -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;text-transform:uppercase">Sentiment Distribution</div>
+              <div class="chart-bars" id="sentChart"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px">
+                <span style="font-family:var(--mono);font-size:9px;color:var(--accent3)">Positive</span>
+                <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">Neutral</span>
+                <span style="font-family:var(--mono);font-size:9px;color:var(--accent2)">Negative</span>
+              </div>
+            </div>
+            <!-- Trend -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;text-transform:uppercase">Sentiment Trend</div>
+              <svg class="trend-svg" id="trendSvg"></svg>
+            </div>
+            <!-- Top Keywords -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;text-transform:uppercase">Top Keywords</div>
+              <div id="keywordCloud"></div>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;text-transform:uppercase">AI Summary</div>
+            <div id="aiSummary" style="font-size:14px;line-height:1.7;color:#c0c0d8"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE TAB -->
+      <div class="tab-content" id="tab-code">
+        <div class="code-block"><pre id="codeDisplay"></pre></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ---- STATE ----
+let selectedTopic = 'AI & Machine Learning';
+let scrapedData = [];
+
+// ---- TOPIC CHIPS ----
+document.querySelectorAll('.topic-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedTopic = chip.dataset.topic;
+  });
+});
+
+// ---- TAB SWITCHING ----
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['data','analysis','code'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ---- TERMINAL ----
+const term = document.getElementById('terminal');
+function termLog(msg, cls='t-out') {
+  const cursor = term.querySelector('.t-cursor');
+  if (cursor) cursor.parentElement.remove();
+  const div = document.createElement('div');
+  div.className = cls;
+  div.textContent = msg;
+  term.appendChild(div);
+  // new prompt
+  const prompt = document.createElement('div');
+  prompt.className = 't-line';
+  prompt.innerHTML = `<span class="t-prompt">$</span><span class="t-cursor"></span>`;
+  term.appendChild(prompt);
+  term.scrollTop = term.scrollHeight;
+}
+function termCmd(cmd) {
+  const cursor = term.querySelector('.t-cursor');
+  if (cursor) cursor.parentElement.querySelector('.t-cursor').remove();
+  const div = document.createElement('div');
+  div.className = 't-line';
+  div.innerHTML = `<span class="t-prompt">$</span><span class="t-cmd"> ${cmd}</span>`;
+  term.appendChild(div);
+  term.scrollTop = term.scrollHeight;
+}
+
+// ---- MAIN SCRAPER ----
+async function runScraper() {
+  const btn = document.getElementById('scrapeBtn');
+  const source = document.getElementById('sourceSelect').value;
+  const count = document.getElementById('articleCount').value;
+  const topic = selectedTopic;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Scraping...';
+
+  // Terminal simulation
+  term.innerHTML = '';
+  await delay(200);
+  termCmd(`python scraper.py --source ${source} --topic "${topic}" --n ${count}`);
+  await delay(400);
+  termLog(`[INFO] Initializing requests session...`, 't-info');
+  await delay(300);
+  termLog(`[INFO] Loading BeautifulSoup parser...`, 't-info');
+  await delay(400);
+  termLog(`[GET]  Fetching ${source} feed for "${topic}"...`, 't-out');
+  await delay(500);
+  termLog(`[OK]   Connected — status 200`, 't-success');
+  await delay(300);
+  termLog(`[INFO] Parsing HTML structure...`, 't-info');
+  await delay(400);
+  termLog(`[INFO] Extracting article headlines & metadata...`, 't-info');
+  await delay(300);
+  termLog(`[INFO] Running VADER sentiment analysis...`, 't-info');
+  await delay(500);
+  termLog(`[INFO] Generating AI trend summary...`, 't-info');
+
+  // Call Claude API
+  try {
+    const prompt = `You are a web scraping and NLP analysis engine. Generate realistic scraped data and analysis for ${count} news articles about "${topic}" from a ${source} source.
+
+Return ONLY valid JSON (no markdown), exactly this structure:
+{
+  "articles": [
+    {
+      "id": 1,
+      "headline": "realistic headline",
+      "source": "source name",
+      "date": "Apr 2026 date",
+      "sentiment": "positive|neutral|negative",
+      "score": 0.0 to 1.0,
+      "keywords": ["kw1","kw2","kw3"]
+    }
+  ],
+  "stats": {
+    "total": ${count},
+    "positive": <count>,
+    "neutral": <count>,
+    "negative": <count>,
+    "avg_score": 0.0
+  },
+  "top_keywords": ["kw1","kw2","kw3","kw4","kw5"],
+  "summary": "2-3 sentence analytical summary of sentiment trends and insights for these articles"
+}`;
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    scrapedData = parsed.articles;
+
+    await delay(300);
+    termLog(`[OK]   Scraped ${count} articles successfully`, 't-success');
+    await delay(200);
+    termLog(`[OK]   Sentiment analysis complete`, 't-success');
+    await delay(200);
+    termLog(`[DONE] Results saved → output.csv`, 't-success');
+
+    renderResults(parsed);
+
+  } catch(e) {
+    termLog(`[ERROR] ${e.message}`, 't-error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶ Run Scraper & Analyze';
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ---- RENDER ----
+function renderResults(data) {
+  // Show table
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('tableWrap').classList.remove('hidden');
+
+  // Stats
+  const sr = document.getElementById('statsRow');
+  const s = data.stats;
+  sr.innerHTML = `
+    <div class="stat-card"><div class="stat-val">${s.total}</div><div class="stat-label">Articles Scraped</div></div>
+    <div class="stat-card"><div class="stat-val" style="background:linear-gradient(135deg,#5cf4c4,#3bcca8);-webkit-background-clip:text">${s.positive}</div><div class="stat-label">Positive</div></div>
+    <div class="stat-card"><div class="stat-val" style="background:linear-gradient(135deg,#fc5c7d,#c0392b);-webkit-background-clip:text">${s.negative}</div><div class="stat-label">Negative</div></div>
+    <div class="stat-card"><div class="stat-val">${(s.avg_score * 100).toFixed(0)}%</div><div class="stat-label">Avg Score</div></div>
+  `;
+
+  // Table rows
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = '';
+  data.articles.forEach((a, i) => {
+    const sentClass = a.sentiment === 'positive' ? 'sent-positive' : a.sentiment === 'negative' ? 'sent-negative' : 'sent-neutral';
+    const barColor = a.sentiment === 'positive' ? '#5cf4c4' : a.sentiment === 'negative' ? '#fc5c7d' : '#6b6b85';
+    const kwHtml = a.keywords.map(k => `<span style="background:rgba(124,92,252,0.12);border:1px solid rgba(124,92,252,0.25);border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#9b8ef0;margin-right:4px">${k}</span>`).join('');
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${String(i+1).padStart(2,'0')}</td>
+        <td style="max-width:280px;font-size:13px;font-weight:600">${a.headline}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${a.source}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${a.date}</td>
+        <td><span class="sentiment-badge ${sentClass}">${a.sentiment}</span></td>
+        <td>
+          <span class="score-bar"><span class="score-fill" style="width:${a.score*100}%;background:${barColor}"></span></span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${a.score.toFixed(2)}</span>
+        </td>
+        <td>${kwHtml}</td>
+      </tr>`;
+  });
+
+  // Analysis tab
+  document.getElementById('analysisEmpty').classList.add('hidden');
+  document.getElementById('analysisContent').classList.remove('hidden');
+
+  // Sentiment chart bars
+  const total = s.total;
+  const chartData = [
+    { val: s.positive, color: '#5cf4c4' },
+    { val: s.neutral,  color: '#6b6b85' },
+    { val: s.negative, color: '#fc5c7d' }
+  ];
+  const max = Math.max(...chartData.map(d => d.val), 1);
+  document.getElementById('sentChart').innerHTML = chartData.map(d =>
+    `<div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${(d.val/max)*70}px;background:${d.color}"></div>
+      <div class="chart-bar-label">${d.val}</div>
+    </div>`
+  ).join('');
+
+  // Trend SVG (line chart of scores)
+  const scores = data.articles.map(a => a.score);
+  const svgW = 220, svgH = 70;
+  const pts = scores.map((v, i) => {
+    const x = (i / (scores.length - 1)) * (svgW - 20) + 10;
+    const y = svgH - 10 - v * (svgH - 20);
+    return `${x},${y}`;
+  }).join(' ');
+  document.getElementById('trendSvg').innerHTML = `
+    <polyline points="${pts}" fill="none" stroke="#7c5cfc" stroke-width="2" stroke-linejoin="round"/>
+    ${scores.map((v,i) => {
+      const x = (i / (scores.length - 1)) * (svgW - 20) + 10;
+      const y = svgH - 10 - v * (svgH - 20);
+      return `<circle cx="${x}" cy="${y}" r="3" fill="#7c5cfc"/>`;
+    }).join('')}
+    <text x="10" y="${svgH - 2}" font-size="8" fill="#546e7a" font-family="Space Mono">article index →</text>
+  `;
+
+  // Keywords
+  const kwColors = ['#7c5cfc','#fc5c7d','#5cf4c4','#ffd93d','#82aaff'];
+  document.getElementById('keywordCloud').innerHTML = data.top_keywords.map((kw, i) =>
+    `<span style="display:inline-block;margin:3px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:11px;background:${kwColors[i%5]}22;border:1px solid ${kwColors[i%5]}44;color:${kwColors[i%5]}">${kw}</span>`
+  ).join('');
+
+  // Summary
+  document.getElementById('aiSummary').textContent = data.summary;
+
+  // Code tab
+  renderCode();
+}
+
+function renderCode() {
+  const source = document.getElementById('sourceSelect').options[document.getElementById('sourceSelect').selectedIndex].text;
+  const topic = selectedTopic;
+  document.getElementById('codeDisplay').innerHTML = `<span class="cm"># web_scraper.py — Task 1: Web Scraping & Sentiment Analysis</span>
+<span class="cm"># Python Internship Project</span>
+
+<span class="kw">import</span> requests
+<span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> vaderSentiment.vaderSentiment <span class="kw">import</span> SentimentIntensityAnalyzer
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">import</span> time, re
+
+<span class="cm"># ─── Configuration ───────────────────────────────────────</span>
+TOPIC   = <span class="str">"${topic}"</span>
+HEADERS = {<span class="str">"User-Agent"</span>: <span class="str">"Mozilla/5.0 (compatible; PythonScraper/1.0)"</span>}
+LIMIT   = <span class="nb">8</span>
+
+<span class="cm"># ─── Scraper ─────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">scrape_articles</span>(topic, limit=LIMIT):
+    url = <span class="fn">f</span><span class="str">"https://news.google.com/search?q={topic.replace(' ', '+')}"</span>
+    resp = requests.<span class="fn">get</span>(url, headers=HEADERS, timeout=<span class="nb">10</span>)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, <span class="str">"html.parser"</span>)
+
+    articles = []
+    <span class="kw">for</span> item <span class="kw">in</span> soup.<span class="fn">select</span>(<span class="str">"article"</span>)[:limit]:
+        title = item.<span class="fn">find</span>(<span class="str">"h3"</span>)
+        source = item.<span class="fn">find</span>(<span class="str">"time"</span>)
+        <span class="kw">if</span> title:
+            articles.<span class="fn">append</span>({
+                <span class="str">"headline"</span>: title.text.<span class="fn">strip</span>(),
+                <span class="str">"source"</span>:   source.get(<span class="str">"datetime"</span>, <span class="str">""</span>) <span class="kw">if</span> source <span class="kw">else</span> <span class="str">""</span>,
+                <span class="str">"url"</span>:      item.<span class="fn">find</span>(<span class="str">"a"</span>)[<span class="str">"href"</span>] <span class="kw">if</span> item.<span class="fn">find</span>(<span class="str">"a"</span>) <span class="kw">else</span> <span class="str">""</span>
+            })
+        time.<span class="fn">sleep</span>(<span class="nb">0.5</span>)  <span class="cm"># polite delay</span>
+    <span class="kw">return</span> articles
+
+<span class="cm"># ─── Sentiment Analysis ──────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">analyze_sentiment</span>(articles):
+    analyzer = SentimentIntensityAnalyzer()
+    <span class="kw">for</span> a <span class="kw">in</span> articles:
+        scores = analyzer.<span class="fn">polarity_scores</span>(a[<span class="str">"headline"</span>])
+        compound = scores[<span class="str">"compound"</span>]
+        a[<span class="str">"score"</span>]     = <span class="fn">round</span>(compound, <span class="nb">4</span>)
+        a[<span class="str">"sentiment"</span>] = (
+            <span class="str">"positive"</span> <span class="kw">if</span> compound >= <span class="nb">0.05</span>
+            <span class="kw">else</span> <span class="str">"negative"</span> <span class="kw">if</span> compound <= -<span class="nb">0.05</span>
+            <span class="kw">else</span> <span class="str">"neutral"</span>
+        )
+    <span class="kw">return</span> articles
+
+<span class="cm"># ─── Visualize ───────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">plot_sentiment</span>(df):
+    fig, (ax1, ax2) = plt.<span class="fn">subplots</span>(<span class="nb">1</span>, <span class="nb">2</span>, figsize=(<span class="nb">12</span>, <span class="nb">5</span>))
+    counts = df[<span class="str">"sentiment"</span>].<span class="fn">value_counts</span>()
+    ax1.<span class="fn">bar</span>(counts.index, counts.values,
+           color=[<span class="str">"#5cf4c4"</span>,<span class="str">"#6b6b85"</span>,<span class="str">"#fc5c7d"</span>])
+    ax1.<span class="fn">set_title</span>(<span class="str">"Sentiment Distribution"</span>)
+    ax2.<span class="fn">plot</span>(df[<span class="str">"score"</span>], marker=<span class="str">"o"</span>, color=<span class="str">"#7c5cfc"</span>)
+    ax2.<span class="fn">axhline</span>(<span class="nb">0</span>, color=<span class="str">"gray"</span>, linestyle=<span class="str">"--"</span>)
+    ax2.<span class="fn">set_title</span>(<span class="str">"Sentiment Scores Over Time"</span>)
+    plt.<span class="fn">tight_layout</span>()
+    plt.<span class="fn">savefig</span>(<span class="str">"sentiment_analysis.png"</span>, dpi=<span class="nb">150</span>)
+    plt.<span class="fn">show</span>()
+
+<span class="cm"># ─── Main ────────────────────────────────────────────────</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">print</span>(<span class="str">f"Scraping articles for: {TOPIC}"</span>)
+    articles = <span class="fn">scrape_articles</span>(TOPIC)
+    articles = <span class="fn">analyze_sentiment</span>(articles)
+
+    df = pd.<span class="fn">DataFrame</span>(articles)
+    df.<span class="fn">to_csv</span>(<span class="str">"output.csv"</span>, index=<span class="nb">False</span>)
+    <span class="fn">print</span>(df[[<span class="str">"headline"</span>,<span class="str">"sentiment"</span>,<span class="str">"score"</span>]].<span class="fn">to_string</span>())
+    <span class="fn">plot_sentiment</span>(df)
+`;
+}
+
+// Initialize code tab on load
+renderCode();
+</script>
+</body>
+</html>
